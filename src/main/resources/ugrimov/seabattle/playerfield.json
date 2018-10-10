@@ -1,0 +1,45 @@
+{
+    "ships": [
+        {
+            "cells": ["a3", "a4", "a5", "a6"],
+            "hitCells": []
+        },
+        {
+            "cells": ["c9", "d9", "e9"],
+            "hitCells": []
+        },
+        {
+            "cells": ["i2", "i3", "i4"],
+            "hitCells": []
+        },
+        {
+            "cells": ["c1", "d1"],
+            "hitCells": []
+        },
+        {
+            "cells": ["b3", "b4"],
+            "hitCells": []
+        },
+        {
+            "cells": ["j5", "j6"],
+            "hitCells": []
+        },
+        {
+            "cells": ["c10"],
+            "hitCells": []
+        },
+        {
+            "cells": ["g2"],
+            "hitCells": []
+        },
+        {
+            "cells": ["j1"],
+            "hitCells": []
+        },
+        {
+            "cells": ["f5"],
+            "hitCells": []
+        }
+    ],
+    "hits": []
+}
