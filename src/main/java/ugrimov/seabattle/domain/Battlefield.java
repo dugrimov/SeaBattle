@@ -2,15 +2,12 @@ package ugrimov.seabattle.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.*;
+
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
-@Data
+@Value
 @Builder
 @RequiredArgsConstructor
 @JsonDeserialize(builder = Battlefield.BattlefieldBuilder.class)
@@ -20,23 +17,34 @@ public class Battlefield {
     public final static List<String> COLUMNS = List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
 
     @NonNull
+    @Singular
     private final Collection<Ship> ships;
 
     @NonNull
-    private final Collection<String> hits;
+    @Singular
+    private final List<String> hits;
 
-    public boolean hit(String cell) {
-        var result = new AtomicBoolean(false);
+    public Battlefield hit(String cell) {
+        var builder = Battlefield.builder().hits(hits);
         if (!hits.contains(cell)) {
-            hits.add(cell);
-            ships.forEach(ship -> {
-                if (ship.getCells().contains(cell) && !ship.getHitCells().contains(cell)) {
-                    ship.getHitCells().add(cell);
-                    result.set(true);
-                }
-            });
+            builder.hit(cell);
         }
-        return result.get();
+        ships.forEach(ship -> {
+            var shipBuilder = Ship.builder().cells(ship.getCells()).hitCells(ship.getHitCells());
+            if (ship.getCells().contains(cell) && !ship.getHitCells().contains(cell)) {
+                shipBuilder.hitCell(cell);
+            }
+            builder.ship(shipBuilder.build());
+        });
+        return builder.build();
+    }
+
+    public boolean isLastHitSuccessful() {
+        if (hits.size() == 0) {
+            return false;
+        }
+        var lastHit = hits.get(hits.size() - 1);
+        return ships.stream().anyMatch(ship -> ship.getHitCells().contains(lastHit));
     }
 
     public boolean isDefeated() {
@@ -45,6 +53,6 @@ public class Battlefield {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static final class BattlefieldBuilder {
-    }   
-    
+    }
+
 }

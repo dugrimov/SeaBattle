@@ -4,26 +4,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.util.StringUtils;
 import ugrimov.seabattle.domain.Battlefield;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class RobotPlayerTest {
 
     @Test
     void testGetCell() {
-        var fieldMock = mock(Battlefield.class);
+//        var battlefield = mock(Battlefield.class);
+//        when(battlefield.getHits()).thenReturn(List.of(hitCell));
         var hitCell = "a1";
-        var unhitCell = "a2";
-        when(fieldMock.getHits()).thenReturn(List.of(hitCell));
+        var battlefield = Battlefield.builder().hit(hitCell).build();
         var player = spy(new RobotPlayer());
-        when(player.conceiveACell()).thenReturn(hitCell).thenReturn(unhitCell);
+        var mishitCell = "a2";
+        when(player.conceiveACell()).thenReturn(hitCell).thenReturn(mishitCell);
 
-        assertEquals(unhitCell, player.getCell(fieldMock));
-        verify(fieldMock, times(2)).getHits();
+        assertEquals(mishitCell, player.getCell(battlefield));
+//        verify(battlefield, times(2)).getHits();
     }
 
     @Test

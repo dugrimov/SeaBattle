@@ -1,18 +1,17 @@
 package ugrimov.seabattle.screen;
 
-import java.util.Collection;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import ugrimov.seabattle.domain.Battlefield;
 import ugrimov.seabattle.domain.Ship;
 
-public class BattlefieldCellMapperTest {
+class BattlefieldCellMapperTest {
 
     private final Ship ship1 = new Ship(List.of("a1", "a2"), List.of());
     private final Ship ship2 = new Ship(List.of("b1", "b2"), List.of("b1"));
     private final Ship ship3 = new Ship(List.of("c1", "c2"), List.of("c2", "c1"));
-    private final Collection<String> hits = List.of("b1", "b2", "c2", "c1", "d1");
+    private final List<String> hits = List.of("b1", "b2", "c2", "c1", "d1");
     private final Battlefield battlefield = new Battlefield(List.of(ship1, ship2, ship3), hits);
 
     @Test

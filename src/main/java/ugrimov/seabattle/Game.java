@@ -1,16 +1,15 @@
 package ugrimov.seabattle;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.io.PrintStream;
-
 import ugrimov.seabattle.domain.Battlefield;
 import ugrimov.seabattle.players.HumanPlayer;
 import ugrimov.seabattle.players.Player;
 import ugrimov.seabattle.players.PlayerSelector;
 import ugrimov.seabattle.players.RobotPlayer;
 import ugrimov.seabattle.screen.*;
+
+import java.io.IOException;
+import java.io.PrintStream;
 
 public class Game {
 
@@ -31,7 +30,7 @@ public class Game {
                 robotMapper, System.out);
     }
 
-    public static void startRobotsGame() throws IOException {
+    static void startRobotsGame() throws IOException {
         Battlefield humanField = new ObjectMapper().readValue(Game.class.getResourceAsStream("playerfield.json"),
                 Battlefield.class);
         Battlefield robotField = new ObjectMapper().readValue(Game.class.getResourceAsStream("robotfield.json"),
@@ -48,19 +47,25 @@ public class Game {
         out.println(gamePrinter.print(field1, mapper1, field2, mapper2));
         var hasHit = true;
         Player currentPlayer;
-        Battlefield enemyField;
+        var battlefield1 = field1;
+        var battlefield2 = field2;
         var playerSelector = new PlayerSelector(player1, player2);
+
         for (var i = 0; i < 10000; i++) {
             currentPlayer = playerSelector.next(hasHit);
-            enemyField = currentPlayer == player1 ? field2 : field1;
-            hasHit = enemyField.hit(currentPlayer.getCell(enemyField));
+            if (currentPlayer == player1) {
+                battlefield2 = battlefield2.hit(currentPlayer.getCell(battlefield2));
+            } else {
+                battlefield1 = battlefield1.hit(currentPlayer.getCell(battlefield1));
+            }
 
-            out.println(gamePrinter.print(field1, mapper1, field2, mapper2));
+            hasHit = currentPlayer == player1 ? battlefield2.isLastHitSuccessful() : battlefield1.isLastHitSuccessful();
+            out.println(gamePrinter.print(battlefield1, mapper1, battlefield2, mapper2));
 
-            if (field1.isDefeated() || field2.isDefeated()) {
+            if (battlefield1.isDefeated() || battlefield2.isDefeated()) {
                 break;
             }
         }
-        out.print(String.format("Game over. Player%d has won.", field1.isDefeated() ? 2 : 1));
+        out.print(String.format("Game over. Player%d has won.", battlefield1.isDefeated() ? 2 : 1));
     }
 }

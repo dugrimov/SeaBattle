@@ -1,67 +1,91 @@
 package ugrimov.seabattle.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
-public class BattlefieldTest {
+import static org.junit.jupiter.api.Assertions.*;
+
+
+class BattlefieldTest {
 
     @Test
-    public void testHit() {
-        var ship1 = new Ship(List.of("a1", "a2", "a3"), new ArrayList<String>());
-        var ship2 = new Ship(List.of("e5", "f5", "g5"), new ArrayList<String>());
-        var battlefield = new Battlefield(List.of(ship1, ship2), new ArrayList<String>());
+    void testHit() {
+        var ship1 = Ship.builder().cells(List.of("a1", "a2", "a3")).build();
+        var ship2 = Ship.builder().cells(List.of("e5", "f5", "g5")).build();
+        var battlefield1 = Battlefield.builder().ship(ship1).ship(ship2).build();
 
-        assertTrue(battlefield.getHits().isEmpty());
+        assertTrue(battlefield1.getHits().isEmpty());
         assertTrue(ship1.getHitCells().isEmpty());
         assertTrue(ship2.getHitCells().isEmpty());
 
-        var cell = "a1";
-        assertTrue(battlefield.hit(cell));
-        assertEquals(1, battlefield.getHits().size());
-        assertTrue(battlefield.getHits().contains(cell));
-        assertEquals(1, ship1.getHitCells().size());
-        assertTrue(ship1.getHitCells().contains(cell));
-        assertEquals(0, ship2.getHitCells().size());
-        // the same hit
-        assertFalse(battlefield.hit(cell));
-        assertEquals(1, battlefield.getHits().size());
-        assertEquals(1, ship1.getHitCells().size());
-        assertEquals(0, ship2.getHitCells().size());
+        final String cellA1 = "a1";
+        var battlefield2 = battlefield1.hit(cellA1);
+        assertEquals(1, battlefield2.getHits().size());
+        assertTrue(battlefield2.getHits().contains(cellA1));
 
-        cell = "b1";
-        assertFalse(battlefield.hit(cell));
-        assertEquals(2, battlefield.getHits().size());
-        assertTrue(battlefield.getHits().contains(cell));
-        assertEquals(1, ship1.getHitCells().size());
-        assertEquals(0, ship2.getHitCells().size());
+        BiFunction<Battlefield, String, List<Ship>> findHitShips =
+                (battlefield, cell) -> battlefield.getShips().stream()
+                .filter(ship -> ship.getCells().contains(cell)
+                        && ship.getHitCells().contains(cell)
+                        && ship.getHitCells().size() == 1)
+                .collect(Collectors.toList());
+        var hitShips = findHitShips.apply(battlefield2, cellA1);
+        assertEquals(1, hitShips.size());
         // the same hit
-        assertFalse(battlefield.hit(cell));
-        assertEquals(2, battlefield.getHits().size());
-        assertEquals(1, ship1.getHitCells().size());
-        assertEquals(0, ship2.getHitCells().size());
+        var battlefield3 = battlefield2.hit(cellA1);
+        assertEquals(1, battlefield3.getHits().size());
+        hitShips = findHitShips.apply(battlefield2, cellA1);
+        assertEquals(1, hitShips.size());
+
+        var cellB1 = "b1";
+        var battlefield4 = battlefield3.hit(cellB1);
+        assertEquals(2, battlefield4.getHits().size());
+        assertTrue(battlefield4.getHits().contains(cellB1));
+
+        BiFunction<Battlefield, String, List<Ship>> findHitShips2 =
+                (battlefield, cell) -> battlefield.getShips().stream()
+                        .filter(ship -> ship.getHitCells().contains(cell))
+                        .collect(Collectors.toList());
+        assertTrue(findHitShips2.apply(battlefield4, cellB1).isEmpty());
+        // the same hit
+        var battlefield5 = battlefield4.hit(cellB1);
+        assertEquals(2, battlefield5.getHits().size());
+        assertTrue(findHitShips2.apply(battlefield5, cellB1).isEmpty());
     }
-    
+
     @Test
-    public void testIsDefeated() {
-        var ship1 = new Ship(List.of("a1", "a2"), new ArrayList());
-        var ship2 = new Ship(List.of("a10"), new ArrayList());
-        assertFalse(new Battlefield(List.of(ship1, ship2), new ArrayList()).isDefeated());
-        
-        ship1 = new Ship(List.of("a1", "a2"), new ArrayList());
-        ship2 = new Ship(List.of("a10"), List.of("a10"));
-        assertFalse(new Battlefield(List.of(ship1, ship2), new ArrayList()).isDefeated());
-        
-        ship1 = new Ship(List.of("a1", "a2"), List.of("a1"));
-        ship2 = new Ship(List.of("a10"), List.of("a10"));
-        assertFalse(new Battlefield(List.of(ship1, ship2), new ArrayList()).isDefeated());
-        
-        ship1 = new Ship(List.of("a1", "a2"), List.of("a1", "a2"));
-        ship2 = new Ship(List.of("a10"), List.of("a10"));
-        assertTrue(new Battlefield(List.of(ship1, ship2), new ArrayList()).isDefeated());
+    void testIsLastHitSuccessful() {
+        var ship = Ship.builder().cells(List.of("a1", "a2", "a3")).build();
+        var battlefield = Battlefield.builder().ship(ship).build();
+        assertFalse(battlefield.isLastHitSuccessful());
+
+        ship = Ship.builder().cells(List.of("a1", "a2", "a3")).hitCell("a2").build();
+        battlefield = Battlefield.builder().ship(ship).hit("a2").build();
+        assertTrue(battlefield.isLastHitSuccessful());
+
+        battlefield = Battlefield.builder().ship(ship).hit("a2").hit("b1").build();
+        assertFalse(battlefield.isLastHitSuccessful());
+    }
+
+    @Test
+    void testIsDefeated() {
+        var ship1 = Ship.builder().cells(List.of("a1", "a2")).build();
+        var ship2 = Ship.builder().cell("a10").build();
+        assertFalse(Battlefield.builder().ships(List.of(ship1, ship2)).build().isDefeated());
+
+        ship1 = Ship.builder().cells(List.of("a1", "a2")).build();
+        ship2 = Ship.builder().cell("a10").hitCell("a10").build();
+        assertFalse(Battlefield.builder().ships(List.of(ship1, ship2)).build().isDefeated());
+
+        ship1 = Ship.builder().cells(List.of("a1", "a2")).hitCell("a1").build();
+        ship2 = Ship.builder().cell("a10").hitCell("a10").build();
+        assertFalse(Battlefield.builder().ships(List.of(ship1, ship2)).build().isDefeated());
+
+        ship1 = Ship.builder().cells(List.of("a1", "a2")).hitCells(List.of("a1", "a2")).build();
+        ship2 = Ship.builder().cell("a10").hitCell("a10").build();
+        assertTrue(Battlefield.builder().ships(List.of(ship1, ship2)).build().isDefeated());
     }
 }

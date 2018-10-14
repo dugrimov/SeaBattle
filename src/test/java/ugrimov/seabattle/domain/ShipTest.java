@@ -1,20 +1,34 @@
 package ugrimov.seabattle.domain;
 
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
-public class ShipTest {
-    
+import static org.junit.jupiter.api.Assertions.*;
+
+class ShipTest {
+
     @Test
-    public void testIsKilled() {
-        assertFalse(new Ship(List.of("a1"), List.of()).isKilled());
-        assertFalse(new Ship(List.of("a1", "a2"), List.of("a1")).isKilled());
-        assertFalse(new Ship(List.of("a1", "a2"), List.of("a2")).isKilled());
-        assertTrue(new Ship(List.of("a1"), List.of("a1")).isKilled());
-        assertTrue(new Ship(List.of("a1", "a2"), List.of("a1", "a2")).isKilled());
-        assertTrue(new Ship(List.of("a1", "a2"), List.of("a2", "a1")).isKilled());
+    void testImmutability() {
+        var ship1 = Ship.builder().cell("a1").hitCell("b1").build();
+        assertNotNull(ship1);
+        var ship2 = Ship.builder().cells(ship1.getCells()).hitCells(ship1.getHitCells()).hitCell("b2").build();
+        assertNotNull(ship2);
+        assertNotSame(ship1, ship2);
+        assertNotSame(ship1.getCells(), ship2.getCells());
+        assertIterableEquals(ship1.getCells(), ship2.getCells());
+        assertNotSame(ship1.getHitCells(), ship2.getHitCells());
+        assertIterableEquals(List.of("b1", "b2"), ship2.getHitCells());
+    }
+
+    @Test
+    void testIsKilled() {
+        assertFalse(Ship.builder().cell("a1").build().isKilled());
+        assertFalse(Ship.builder().cells(List.of("a1", "a2")).hitCell("a1").build().isKilled());
+        assertFalse(Ship.builder().cells(List.of("a1", "a2")).hitCell("a2").build().isKilled());
+        assertTrue(Ship.builder().cell("a1").hitCell("a1").build().isKilled());
+        assertTrue(Ship.builder().cells(List.of("a1", "a2")).hitCells(List.of("a1", "a2")).build().isKilled());
+        assertTrue(Ship.builder().cells(List.of("a1", "a2")).hitCells(List.of("a2", "a1")).build().isKilled());
     }
     
 }
